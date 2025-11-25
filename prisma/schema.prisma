@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  password       String
+  role           String           @default("MEMBER")
+
+  reimbursements Reimbursement[]
+}
+
+
+model Reimbursement {
+  id          String               @id @default(uuid())
+  value       Decimal              @db.Decimal(10, 2)
+  description String
+  status      ReimbursementStatus  @default(PENDING)
+  date        DateTime
+
+  // FK
+  memberId    String
+  member      User                 @relation(fields: [memberId], references: [id])
+}
+
+enum ReimbursementStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model Client {
+  id         String    @id @default(uuid())
+  name       String
+  fiscalCode String
+  email      String?
+  phone      String?
+  
+  contracts  Contract[]
+}
+
+model Contract {
+  id          String          @id @default(uuid())
+  description String
+  totalValue  Decimal         @db.Decimal(10, 2)
+  status      ContractStatus
+
+  // FK
+  clientId    String
+  client      Client          @relation(fields: [clientId], references: [id])
+}
+
+enum ContractStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
